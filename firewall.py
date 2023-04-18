@@ -81,10 +81,11 @@ def agent_normalize(pkt):
     send(packet_cov, count=1)
 
 def agent_fictitious_traffic(pkt):
+    ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst)
+    udp_header = UDP(sport=pkt['UDP'].sport, dport=SECOND_CLIENT_ADDRESS[1])
+    packet_cov = ip_header / udp_header / pkt['UDP'].payload
+    send(packet_cov, count=1)
     if random.randint(1, 101) <= 30:
-        ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst)
-        udp_header = UDP(sport=pkt['UDP'].sport, dport=SECOND_CLIENT_ADDRESS[1])
-        packet_cov = ip_header / udp_header / pkt['UDP'].payload
         send(packet_cov, count=1)
 
 if __name__ == '__main__':
