@@ -9,7 +9,7 @@ from scapy.layers.inet import *
 SECOND_CLIENT_ADDRESS = ('127.0.0.1', 65012)
 FIRST_CLIENT_ADDRESS = ('127.0.0.1', 65011)
 PROXY_ADDRESS = ('127.0.0.1', 65010)
-
+FIREWALL_ADDRESS = ('127.0.0.1', 65009)
 
 
 # Имитация сетевого экрана
@@ -97,43 +97,33 @@ class Agent:
 
 def agent_ttl(covert_message, pkt):
     if covert_message:
-        ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, ttl=20)
-        udp_header = UDP(sport=pkt['UDP'].sport, dport=65012)
+        ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, ttl=10)
+        udp_header = UDP(sport=pkt['UDP'].sport, dport=FIREWALL_ADDRESS[1])
         packet_cov = ip_header / udp_header / pkt['UDP'].payload
         print("Send packet")
-        send(packet_cov)
+        send(packet_cov, count=1)
     else:
-        ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, ttl=200)
-        udp_header = UDP(sport=pkt['UDP'].sport, dport=65012)
+        ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, ttl=100)
+        udp_header = UDP(sport=pkt['UDP'].sport, dport=FIREWALL_ADDRESS[1])
         packet_cov = ip_header / udp_header / pkt['UDP'].payload
         print("Send packet")
-        send(packet_cov)
+        send(packet_cov, count=1)
 
 
 def agent_qos(covert_message, pkt):
     data = 0 | covert_message
     ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, tos=data)
-    udp_header = UDP(sport=pkt['UDP'].sport, dport=65012)
+    udp_header = UDP(sport=pkt['UDP'].sport, dport=SECOND_CLIENT_ADDRESS[1])#FIREWALL_ADDRESS[1])
     packet_cov = ip_header / udp_header / pkt['UDP'].payload
-    send(packet_cov)
+    send(packet_cov, count=1)
    
 
 def agent_checksum(covert_message, pkt):
     checksun_last_bit = pkt.chksum & 1
-    
-    #print(covert_message)
-    #print(covert_message & 1)
-    #print(pkt.chksum)
-    #print(pkt.chksum & 1)
-    
-    #if covert_message == checksun_last_bit:
-        #ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, chksum=checksun_last_bit)
-        #send(pkt)
-    #else:
     ip_header = IP(src=pkt.getlayer(IP).src, dst=pkt.getlayer(IP).dst, chksum=covert_message)
-    udp_header = UDP(sport=pkt['UDP'].sport, dport=65012)
+    udp_header = UDP(sport=pkt['UDP'].sport, dport=FIREWALL_ADDRESS[1])
     packet_cov = ip_header / udp_header / pkt['UDP'].payload
-    send(packet_cov)
+    send(packet_cov, count=1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Covert channel emulation')

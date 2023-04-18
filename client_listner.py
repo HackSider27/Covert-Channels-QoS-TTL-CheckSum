@@ -2,6 +2,7 @@ from scapy.all import *
 import socket
 import argparse
 import queue
+from bitarray import bitarray
 
 # client outside the IS who recieves the legal info as well as secrete message that was added by proxy
 
@@ -65,9 +66,27 @@ class Worker(threading.Thread):
             else:
                 time.sleep(0.1)
                 sleep_time += 0.1
-                if sleep_time > 1.5:
-                    print(self.msg)
+                if sleep_time > 3.0:
+                    self.remove_every_second_element()
+                    print(self.bits_to_string())
                     return
+
+    def remove_every_second_element(self):
+        self.msg = self.msg[::2]
+
+    def bits_to_string(self):
+        try:
+            # Создаем объект bitarray из списка битов
+            bit_array = bitarray(self.msg)
+            # Преобразуем bitarray в байтовую строку
+            byte_string = bit_array.tobytes()
+            # Преобразуем байтовую строку в строку с использованием кодировки UTF-8
+            result = byte_string.decode('utf-8')
+            print("Message:")
+        except:
+            print('Error in convert bits msg to string')
+            result = self.msg
+        return result
                    
 
 class Agent:
@@ -97,10 +116,12 @@ def listener():
 
 
 def decoder_ttl(pac):
-    if pac.ttl == 20:
+    if pac.ttl == 10:
         return 1
-    elif pac.ttl == 200:
+    elif pac.ttl == 100:
         return 0
+    else:
+        return 2
 
     return -1
 
@@ -132,4 +153,5 @@ if __name__ == '__main__':
     thread_proxy.start()
     
     thread_agent.join()
-    thread_proxy.join()
+    thread_proxy.join()
+
